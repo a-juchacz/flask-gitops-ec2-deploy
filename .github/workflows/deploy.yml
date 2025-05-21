@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  AWS_REGION: us-east-1  # Change this to your AWS region
+  AWS_REGION: eu-central-1  
   ECR_REPOSITORY: flask-ec2-app
   DOCKER_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}
   DOCKER_TAG: ${{ github.sha }}
