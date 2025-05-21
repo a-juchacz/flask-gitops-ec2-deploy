@@ -68,3 +68,5 @@ The following secrets need to be configured in your GitHub repository:
 7. Stops and removes any existing container
 8. Pulls the latest image
 9. Runs the new container
+
+   # Trigger workflow
