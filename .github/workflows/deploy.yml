@@ -1,0 +1,53 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/flask-ec2-app
+  DOCKER_TAG: ${{ github.sha }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_IMAGE }}:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Stop and remove existing container if it exists
+            docker stop myapp || true
+            docker rm myapp || true
+            
+            # Pull the latest image
+            docker pull ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+            
+            # Run the new container
+            docker run --rm -d \
+              --name myapp \
+              -p 80:80 \
+              ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} 
