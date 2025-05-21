@@ -36,21 +36,35 @@ The application will be available at `http://localhost:80`
 
 This project uses GitHub Actions for continuous deployment to EC2. The workflow automatically builds and deploys the application when changes are pushed to the main branch.
 
+### Prerequisites
+
+1. Create an ECR repository named `flask-ec2-app` in your AWS account
+2. Create an IAM role for GitHub Actions with the following permissions:
+   - `AmazonECR-FullAccess`
+   - `AmazonEC2ContainerRegistryFullAccess`
+3. Configure the EC2 instance with:
+   - IAM role that has ECR pull permissions
+   - AWS CLI installed
+   - Docker installed
+
 ### Required Secrets
 
 The following secrets need to be configured in your GitHub repository:
 
-- `DOCKER_USERNAME`: Your Docker Hub username
-- `DOCKER_PASSWORD`: Your Docker Hub password or access token
+- `AWS_ACCOUNT_ID`: Your AWS account ID
+- `AWS_ROLE_ARN`: The ARN of the IAM role for GitHub Actions
 - `EC2_HOST`: The public IP or hostname of your EC2 instance
 - `EC2_USERNAME`: The username for SSH access (usually 'ec2-user' or 'ubuntu')
 - `EC2_SSH_KEY`: The private SSH key for accessing the EC2 instance
 
 ### Workflow Steps
 
-1. Builds the Docker image
-2. Pushes the image to Docker Hub
-3. SSH into the EC2 instance
-4. Stops and removes any existing container
-5. Pulls the latest image
-6. Runs the new container
+1. Authenticates with AWS using OIDC
+2. Logs into Amazon ECR
+3. Builds the Docker image
+4. Pushes the image to ECR
+5. SSH into the EC2 instance
+6. Logs into ECR on the EC2 instance
+7. Stops and removes any existing container
+8. Pulls the latest image
+9. Runs the new container
