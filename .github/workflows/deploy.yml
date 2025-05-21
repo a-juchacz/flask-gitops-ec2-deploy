@@ -15,7 +15,6 @@ jobs:
     env:
       AWS_REGION: eu-central-1  
       ECR_REPOSITORY: flask-ec2-app
-      DOCKER_TAG: ${{ github.sha }}
 
     steps:
       - name: Checkout code
@@ -34,9 +33,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Define Docker Image URI
+      - name: Define Docker Image URI and unified tag
         id: vars
-        run: echo "DOCKER_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}" >> $GITHUB_ENV
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TAG="deploy-$(date +'%Y%m%d')-${SHORT_SHA}"
+          IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}"
+
+          echo "DOCKER_TAG=$TAG" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE=$IMAGE" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -45,13 +50,13 @@ jobs:
           push: true
           tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_IMAGE }}:latest
 
-      - name: Create and push git tag
+      - name: Create and push Git tag
         if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git tag ${{ github.sha }}
-          git push origin ${{ github.sha }} 
+          git tag ${{ env.DOCKER_TAG }}
+          git push origin ${{ env.DOCKER_TAG }}
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -64,4 +69,4 @@ jobs:
             docker stop myapp || true
             docker rm myapp || true
             docker pull ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-            docker run --rm -d --name myapp -p 80:80 ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+            # docker run --rm -d --name myapp -p 80:80 ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
