@@ -45,6 +45,14 @@ jobs:
           push: true
           tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_IMAGE }}:latest
 
+      - name: Create and push git tag
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag ${{ github.sha }}
+          git push origin ${{ github.sha }} 
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
