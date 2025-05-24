@@ -50,11 +50,6 @@ jobs:
           push: true
           tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_IMAGE }}:latest
 
-      - name: Fail the pipeline
-        run: |
-          echo "This step will fail now."
-          exit 1
-
       - name: Create and push Git tag
         if: github.ref == 'refs/heads/main'
         run: |
