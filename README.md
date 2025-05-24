@@ -1,6 +1,6 @@
 # Flask EC2 Hello World
 
-A simple Flask application that returns "Hello from EC2!" when accessed.
+A simple application that returns "Hello from EC2!" when accessed.
 
 ## Setup and Running
 
